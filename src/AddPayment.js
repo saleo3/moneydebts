@@ -1,6 +1,6 @@
 import React, { Component } from 'react';
 import { graphql, compose } from 'react-apollo';
-import { USR_ID } from "./constants";
+import { userID } from "./constants";
 import { _filterById } from "./helpers";
 import { GET_ALL_USERS, CREATE_PAYMENT_MUTATION } from "./gql";
 
@@ -15,7 +15,7 @@ class AddPayment extends Component {
 
   async addPayment() {
     const { description, quantity, collaborators } = this.state;
-    const postedById = localStorage.getItem(USR_ID)
+    const postedById = userID
 
     await this.props.createPaymentMutation({
       variables: { 
@@ -58,7 +58,7 @@ class AddPayment extends Component {
         Add Payment <br />
         <input type='text' value={this.state.description} onChange={e => this.handleDescription(e)} />
         <input type='text' value={this.state.quantity} onChange={e => this.handleQuantity(e)} />
-        {allUsers.filter(_filterById(USR_ID)).map( 
+        {allUsers.filter(_filterById(userID)).map( 
             user => <label key={user.id}>{user.name} <input type="checkbox" value={user.id} onChange={e => this.handleCollaborators(e)}/></label>
         )}
         <button onClick={this.addPayment.bind(this)}>ADD -></button>

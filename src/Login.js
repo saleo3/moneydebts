@@ -1,6 +1,6 @@
 import React, { Component } from "react";
 import { graphql, gql, compose } from 'react-apollo';
-import { USR_ID, ATH_TKN } from "./constants";
+import { setUserID, setAuthToken } from "./constants";
 
 class Login extends Component {
 
@@ -14,8 +14,8 @@ class Login extends Component {
   }
 
   _saveUserData(id, token) {
-    localStorage.setItem(USR_ID, id);
-    localStorage.setItem(ATH_TKN, token);
+    setUserID(id);
+    setAuthToken(token);
   }
 
   async signinupHandler(isLogged) {
