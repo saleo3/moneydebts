@@ -52,7 +52,7 @@ class PaymentList extends Component {
       {_itsYou(id, '', '+++')}
       {description} - {this._splitOthersPayment(id, quantity, collaborators)} <br/> 
       By {_itsYou(id, 'You', name)} [ 
-        {collaborators.map(_getCollaboratorsName).join(', ')}
+        {collaborators.map(_getCollaboratorsName(userID)).join(', ')}
       ]
       <br/><br/>
     </div>;

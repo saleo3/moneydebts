@@ -1,7 +1,7 @@
 
 export function _filterById(ID) {
 
-  return user => user.id !== localStorage.getItem(ID);
+  return user => user.id !== ID;
 
 } 
 
@@ -11,8 +11,8 @@ export function _compare( thingToCompare ) {
 
 }
 
-export function _getCollaboratorsName(collaborator, index) {
+export function _getCollaboratorsName(ID) {
 
-  return collaborator.name
+  return collaborator => collaborator.id === ID? 'You': collaborator.name;
 
 }
