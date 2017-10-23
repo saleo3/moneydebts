@@ -1,6 +1,6 @@
 import React, { Component } from 'react';
 import { graphql } from 'react-apollo';
-import { USR_ID } from './constants';
+import { userID } from './constants';
 import { PAYMENTS_SUSCRIPTIONS, PAYMENTS_BY_USER } from './gql';
 import { _compare, _getCollaboratorsName } from './helpers';
 
@@ -40,8 +40,23 @@ class PaymentList extends Component {
 
   }
 
-  _renderPayment({ postedBy, quantity, collaborators }) {
-    return postedBy.id !== localStorage.getItem(USR_ID)? Math.round(quantity / (collaborators.length + 1)): quantity
+  _splitOthersPayment(id, quantity, collaborators, total = 0 ) {
+    total = total + ( id !== userID? Math.round(quantity / (collaborators.length + 1)): quantity )
+    return total;
+  }
+
+  _renderPaymentsList({ postedBy: { id, name }, collaborators, description, quantity }, k ) {
+    const _itsYou = _compare( userID );
+    
+    return <div key={k}>
+      {_itsYou(id, '', '+++')}
+      {description} - {this._splitOthersPayment(id, quantity, collaborators)} <br/> 
+      By {_itsYou(id, 'You', name)} [ 
+        {collaborators.map(_getCollaboratorsName).join(', ')}
+      ]
+      <br/><br/>
+    </div>;
+
   }
 
   render() {
@@ -52,28 +67,39 @@ class PaymentList extends Component {
 
     if (error) return <div>Error</div>;
 
-    const _itsYou = _compare( localStorage.getItem(USR_ID) );
-    const { ownMe, ownThem } = allPayments.reduce( (acc, cur) => {
+    
+    const { ownMe, ownThem, paymentsByUser, paymentsList} = allPayments.reduce( (acc, cur, k) => {
 
-      if( cur.postedBy.id !== localStorage.getItem(USR_ID) ) return { ownMe: acc.ownMe, ownThem: acc.ownThem + this._renderPayment(cur)};
+      const { postedBy: { id }, collaborators, quantity } = cur;
+      const isIdInObj = id in acc.paymentsByUser;
+      const accPayments = acc.paymentsByUser[id];
+      const addPayments = (accPayments && [...accPayments.payments]) || [];
+      const paymentsList = [...acc.paymentsList];
 
-      return { ownMe: acc.ownMe + cur.quantity, ownThem: acc.ownThem };
+      if ( isIdInObj ) addPayments.push(cur);
 
-    }, { ownMe: 0, ownThem: 0 });
+      acc.paymentsByUser[id] = { 
+        payments: isIdInObj? addPayments: [cur], 
+        total: isIdInObj? this._splitOthersPayment(id, quantity, collaborators, accPayments.total): this._splitOthersPayment(id, quantity, collaborators)
+      };
+      
+      paymentsList.push(this._renderPaymentsList(cur, k));
 
-    // console.dir(mreduce)
+      return { 
+        ownMe: acc.ownMe + (id === userID? quantity: 0), 
+        ownThem: acc.ownThem + (id !== userID? this._splitOthersPayment(id, quantity, collaborators): 0), 
+        paymentsByUser: acc.paymentsByUser, 
+        paymentsList 
+      };
+
+    }, { ownMe: 0, ownThem: 0, paymentsByUser: {}, paymentsList: []  });
+
+      console.log(paymentsByUser, ownMe, ownThem)
 
     return (
       <div>
         Payments
-        {allPayments.map( 
-          (payment, k, arr) => <div key={k}>
-          {_itsYou(payment.postedBy.id, '', '+++')}
-          {payment.description} - {this._renderPayment(payment)} <br/> 
-          By {_itsYou(payment.postedBy.id, 'You', payment.postedBy.name)} [ 
-          {payment.collaborators.map(_getCollaboratorsName).join(', ')}
-          ]<br/><br/></div>
-        )}
+        {paymentsList}
         {ownMe > ownThem? 'They own you:': 'You own them'} {Math.abs(ownMe - ownThem)}
       </div>
     );
@@ -87,7 +113,7 @@ export default graphql(
   {
     options: {
       variables: {
-        user_id: localStorage.getItem(USR_ID)
+        user_id: userID
       }
     }
   }
