@@ -1,7 +1,7 @@
 import React, { Component } from 'react';
-import { graphql } from 'react-apollo';
+import { graphql, compose } from 'react-apollo';
 import { userID } from './constants';
-import { PAYMENTS_SUSCRIPTIONS, PAYMENTS_BY_USER } from './gql';
+import { PAYMENTS_SUSCRIPTIONS, PAYMENTS_BY_USER, DELETE_PAYMENT_BY_ID } from './gql';
 import { _compare, _getCollaboratorsName } from './helpers';
 
 
@@ -9,7 +9,7 @@ class PaymentList extends Component {
 
   componentDidMount() {
 
-    this.props.data.subscribeToMore({
+    this.props.paymentsByUser.subscribeToMore({
       document: PAYMENTS_SUSCRIPTIONS,
       updateQuery: (previous, {subscriptionData}) => {
         let payments;
@@ -45,7 +45,7 @@ class PaymentList extends Component {
     return total;
   }
 
-  _renderPaymentsList({ postedBy: { id, name }, collaborators, description, quantity }, k ) {
+  _renderPaymentsList({ postedBy: { id, name }, collaborators, description, quantity, id: paymentId }, k ) {
     const _itsYou = _compare( userID );
     
     return <div key={k}>
@@ -54,33 +54,45 @@ class PaymentList extends Component {
       By {_itsYou(id, 'You', name)} [ 
         {collaborators.map(_getCollaboratorsName(userID)).join(', ')}
       ]
+      <button onClick={e => this.deletePaymentById(paymentId)}>Delete</button>
       <br/><br/>
     </div>;
 
   }
 
-  render() {
-    const { data: { loading, error, allPayments } } = this.props;
+  async deletePaymentById( id ) {
 
-    // console.log(this.props)
+    await this.props.deletePaymentById({
+      variables: {
+        id
+      }
+    })
+
+  }
+
+  render() {
+
+    const { paymentsByUser: { loading, error, allPayments } } = this.props;
+
     if (loading) return <div>Loading</div>;
 
     if (error) return <div>Error</div>;
 
-    
+
     const { ownMe, ownThem, paymentsByUser, paymentsList} = allPayments.reduce( (acc, cur, k) => {
 
-      const { postedBy: { id }, collaborators, quantity } = cur;
+      const { postedBy: { id, name }, collaborators, quantity } = cur;
       const isIdInObj = id in acc.paymentsByUser;
       const accPayments = acc.paymentsByUser[id];
       const addPayments = (accPayments && [...accPayments.payments]) || [];
       const paymentsList = [...acc.paymentsList];
 
       if ( isIdInObj ) addPayments.push(cur);
-
+      
       acc.paymentsByUser[id] = { 
         payments: isIdInObj? addPayments: [cur], 
-        total: isIdInObj? this._splitOthersPayment(id, quantity, collaborators, accPayments.total): this._splitOthersPayment(id, quantity, collaborators)
+        total: isIdInObj? this._splitOthersPayment(id, quantity, collaborators, accPayments.total): this._splitOthersPayment(id, quantity, collaborators),
+        userName: name
       };
       
       paymentsList.push(this._renderPaymentsList(cur, k));
@@ -108,13 +120,19 @@ class PaymentList extends Component {
 
 };
 
-export default graphql(
-  PAYMENTS_BY_USER,
-  {
-    options: {
-      variables: {
-        user_id: userID
+export default compose(
+  graphql(
+    PAYMENTS_BY_USER,
+    {
+      name: 'paymentsByUser',
+      options: {
+        variables: {
+          user_id: userID
+        }
       }
     }
-  }
+  ),
+  graphql(DELETE_PAYMENT_BY_ID, {
+    name: 'deletePaymentById'
+  })
 )(PaymentList);

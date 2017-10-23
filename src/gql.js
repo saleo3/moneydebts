@@ -82,3 +82,13 @@ export const GET_ALL_USERS = gql`
   }
   
 `;
+
+export const DELETE_PAYMENT_BY_ID = gql`
+
+   mutation deletePaymentById( $id: ID! ) {
+     deletePayment( id: $id ) {
+       id
+     }
+   }
+
+`;
