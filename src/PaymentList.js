@@ -54,7 +54,7 @@ class PaymentList extends Component {
       By {_itsYou(id, 'You', name)} [ 
         {collaborators.map(_getCollaboratorsName(userID)).join(', ')}
       ]
-      <button onClick={e => this.deletePaymentById(paymentId)}>Delete</button>
+      {(userID === id) && <button onClick={e => this.deletePaymentById(paymentId)}>Delete</button>}
       <br/><br/>
     </div>;
 
