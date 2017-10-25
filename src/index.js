@@ -7,6 +7,7 @@ import { ApolloProvider, createNetworkInterface, ApolloClient } from "react-apol
 import { authToken } from "./constants";
 import { SubscriptionClient, addGraphQLSubscriptions } from 'subscriptions-transport-ws';
 // import { addGraphQLSubscriptions } from 'add-graphql-subscriptions';
+import { BrowserRouter } from 'react-router-dom';
 
 
 const networkInterface = createNetworkInterface({
@@ -40,9 +41,11 @@ const client = new ApolloClient({
 });
 
 ReactDOM.render(
+  <BrowserRouter>
     <ApolloProvider client={client}>
         <App />
-    </ApolloProvider>, 
+    </ApolloProvider>
+  </BrowserRouter>, 
     document.getElementById('root')
 );
 
