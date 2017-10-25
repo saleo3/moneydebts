@@ -127,7 +127,8 @@ export default compose(
       name: 'paymentsByUser',
       options: {
         variables: {
-          user_id: userID
+          user_id: userID,
+          group_id: localStorage.getItem('debts-group-id')
         }
       }
     }

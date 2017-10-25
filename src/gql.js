@@ -26,7 +26,7 @@ export const PAYMENTS_SUSCRIPTIONS = gql`
   }`;
 
 export const PAYMENTS_BY_USER = gql`
-query allPaymentsByUserQuery ($user_id: ID!) {
+query allPaymentsByUserQuery ($user_id: ID!, $group_id: ID!) {
   allPayments(
     orderBy: id_DESC
     filter: {
@@ -42,6 +42,9 @@ query allPaymentsByUserQuery ($user_id: ID!) {
           } 
         }
       ]
+      group: {
+        id: $group_id
+      }
     }
   ) {
     id
@@ -60,12 +63,13 @@ query allPaymentsByUserQuery ($user_id: ID!) {
 
 export const CREATE_PAYMENT_MUTATION = gql`
 
-mutation createPaymentMutation($description: String!, $quantity: Float!, $postedById: ID!, $collaboratorsIds: [ID!]!) {
+mutation createPaymentMutation($description: String!, $quantity: Float!, $postedById: ID!, $collaboratorsIds: [ID!]!, $groupId: ID!) {
   createPayment(
     description: $description
     quantity: $quantity
     postedById: $postedById
     collaboratorsIds: $collaboratorsIds
+    groupId: $groupId
   ) {
     id
   }
