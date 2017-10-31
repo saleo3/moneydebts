@@ -25,7 +25,7 @@ export const PAYMENTS_SUSCRIPTIONS = gql`
     }
   }`;
 
-export const PAYMENTS_BY_USER = gql`
+export const PAYMENTS_ALL_USERS = gql`
 query allPaymentsByUserQuery ($user_id: ID!, $group_id: ID!) {
   allPayments(
     orderBy: id_DESC
@@ -94,5 +94,32 @@ export const DELETE_PAYMENT_BY_ID = gql`
        id
      }
    }
+
+`;
+
+
+export const PAYMENTS_BY_USER = gql`
+
+query allPaymentsByUser($group_id: ID!) {
+    Group(id: $group_id) {
+      users {
+        id
+        name
+        payments {
+          id
+          quantity
+          description
+          _collaboratorsMeta {
+            count
+          }
+          collaborators {
+            id
+            name
+          }
+        }
+      }
+    }
+  }
+  
 
 `;

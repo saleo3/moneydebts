@@ -3,6 +3,7 @@ import { graphql, compose } from 'react-apollo';
 import { userID } from './constants';
 import { PAYMENTS_SUSCRIPTIONS, PAYMENTS_BY_USER, DELETE_PAYMENT_BY_ID } from './gql';
 import { _compare, _getCollaboratorsName } from './helpers';
+import './styles.css';
 
 
 class PaymentList extends Component {
@@ -40,26 +41,6 @@ class PaymentList extends Component {
 
   }
 
-  _splitOthersPayment(id, quantity, collaborators, total = 0 ) {
-    total = total + ( id !== userID? Math.round(quantity / (collaborators.length + 1)): quantity )
-    return total;
-  }
-
-  _renderPaymentsList({ postedBy: { id, name }, collaborators, description, quantity, id: paymentId }, k ) {
-    const _itsYou = _compare( userID );
-    
-    return <div key={k}>
-      {_itsYou(id, '', '+++')}
-      {description} - {this._splitOthersPayment(id, quantity, collaborators)} <br/> 
-      By {_itsYou(id, 'You', name)} [ 
-        {collaborators.map(_getCollaboratorsName(userID)).join(', ')}
-      ]
-      {(userID === id) && <button onClick={e => this.deletePaymentById(paymentId)}>Delete</button>}
-      <br/><br/>
-    </div>;
-
-  }
-
   async deletePaymentById( id ) {
 
     await this.props.deletePaymentById({
@@ -70,49 +51,114 @@ class PaymentList extends Component {
 
   }
 
+  toggleActivePayment({ target: selectedPayment }) {
+    selectedPayment.classList.toggle('active');
+  }
+
+  // _totalByUser( id, payments ) {
+
+  //   return payments.reduce( (acc, cur) => {
+
+  //     acc.totalByUser[id] = cur.quantity + ( (id in acc)? acc[id]: 0 ) 
+
+  //     return acc;
+  //   }, { totalByUser: {} });
+
+  // }
+
+  // _getDebts( id, payments ) {
+  //     const x = payments.filter( ({ collaborators }) => {
+  //       return collaborators.find( collaborator => collaborator.id === userID )
+  //     }).reduce( (a, c) => a + this._splitPayment(c.quantity, c._collaboratorsMeta.count), 0)
+
+  //     console.log(x)
+  // }
+
+  _splitPayment( quantity, many, total = 0 ) {
+    return total + Math.round(quantity / many);
+  }
+
+  _getAmounts( payments ) {
+
+    return payments.reduce( (a, {quantity, collaborators, _collaboratorsMeta}) => {
+      
+      collaborators.forEach( colaborator => {
+        const _hofSplit = ( total = 0 ) => this._splitPayment(quantity, _collaboratorsMeta.count, total);
+        a[colaborator.id] = (colaborator.id in a)? _hofSplit(a[colaborator.id]): _hofSplit(); 
+      })
+
+      a.total = a.total + quantity;
+
+      return a;
+
+    }, { total: 0 })
+
+  }
+
+  _renderPaymentsList2( postedById, { id, description, quantity, collaborators, _collaboratorsMeta }, k ) {
+    
+    const total = (userID !== postedById)? 
+      this._splitPayment(quantity, _collaboratorsMeta.count): 
+        quantity;
+
+    return <div key={k}>
+      {description} - {total} 
+      <br/> 
+      [{collaborators.map(_getCollaboratorsName(userID)).join(', ')}]
+      {(userID === postedById) && <button onClick={e => this.deletePaymentById(id)}>Delete</button>}
+      <br/><br/>
+    </div>;
+
+  }
+
+  _renderWhoOwsWho(mine, their) {
+    return (mine > their? 'They own: ': 'You own: ') + Math.abs(mine - their);
+  }
+ 
   render() {
 
-    const { paymentsByUser: { loading, error, allPayments } } = this.props;
+
+    const { paymentsByUser: { loading, error, Group } } = this.props;
 
     if (loading) return <div>Loading</div>;
 
     if (error) return <div>Error</div>;
 
+    const payments = Group.users.reduce( (acc, { id, name, payments }) => {
 
-    const { ownMe, ownThem, paymentsByUser, paymentsList} = allPayments.reduce( (acc, cur, k) => {
+      const amounts = this._getAmounts(payments);
 
-      const { postedBy: { id, name }, collaborators, quantity } = cur;
-      const isIdInObj = id in acc.paymentsByUser;
-      const accPayments = acc.paymentsByUser[id];
-      const addPayments = (accPayments && [...accPayments.payments]) || [];
-      const paymentsList = [...acc.paymentsList];
+      acc[id] = { id, name, payments, amounts };
 
-      if ( isIdInObj ) addPayments.push(cur);
-      
-      acc.paymentsByUser[id] = { 
-        payments: isIdInObj? addPayments: [cur], 
-        total: isIdInObj? this._splitOthersPayment(id, quantity, collaborators, accPayments.total): this._splitOthersPayment(id, quantity, collaborators),
-        userName: name
-      };
-      
-      paymentsList.push(this._renderPaymentsList(cur, k));
+      return acc
 
-      return { 
-        ownMe: acc.ownMe + (id === userID? quantity: 0), 
-        ownThem: acc.ownThem + (id !== userID? this._splitOthersPayment(id, quantity, collaborators): 0), 
-        paymentsByUser: acc.paymentsByUser, 
-        paymentsList 
-      };
+    }, {})
 
-    }, { ownMe: 0, ownThem: 0, paymentsByUser: {}, paymentsList: []  });
-
-      console.log(paymentsByUser, ownMe, ownThem)
+    console.log(payments)
 
     return (
       <div>
         Payments
-        {paymentsList}
-        {ownMe > ownThem? 'They own you:': 'You own them'} {Math.abs(ownMe - ownThem)}
+        <div className="accordion">
+          {Object.keys(payments).map( (id, k) => {
+
+            const user = payments[id];
+            const their = user.amounts[userID] || 0;
+            const mine = payments[userID].amounts[id];
+
+            return <div key={k}>
+                <div className="accordion title" onClick={e => this.toggleActivePayment(e)}>
+                  {user.name} - {user.amounts.total}
+                </div>
+                <div className="accordion content">
+                  {user.payments.map( (payment, k) => this._renderPaymentsList2(user.id, payment, k) )}
+                  <br/>
+                  {id !== userID && this._renderWhoOwsWho(mine, their)}
+                </div>
+            </div>
+
+          })}
+        </div>
       </div>
     );
 
