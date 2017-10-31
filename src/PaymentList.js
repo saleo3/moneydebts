@@ -2,7 +2,7 @@ import React, { Component } from 'react';
 import { graphql, compose } from 'react-apollo';
 import { userID } from './constants';
 import { PAYMENTS_SUSCRIPTIONS, PAYMENTS_BY_USER, DELETE_PAYMENT_BY_ID } from './gql';
-import { _compare, _getCollaboratorsName } from './helpers';
+import { _getCollaboratorsName } from './helpers';
 import './styles.css';
 
 
@@ -55,25 +55,6 @@ class PaymentList extends Component {
     selectedPayment.classList.toggle('active');
   }
 
-  // _totalByUser( id, payments ) {
-
-  //   return payments.reduce( (acc, cur) => {
-
-  //     acc.totalByUser[id] = cur.quantity + ( (id in acc)? acc[id]: 0 ) 
-
-  //     return acc;
-  //   }, { totalByUser: {} });
-
-  // }
-
-  // _getDebts( id, payments ) {
-  //     const x = payments.filter( ({ collaborators }) => {
-  //       return collaborators.find( collaborator => collaborator.id === userID )
-  //     }).reduce( (a, c) => a + this._splitPayment(c.quantity, c._collaboratorsMeta.count), 0)
-
-  //     console.log(x)
-  // }
-
   _splitPayment( quantity, many, total = 0 ) {
     return total + Math.round(quantity / many);
   }
@@ -97,14 +78,12 @@ class PaymentList extends Component {
 
   _renderPaymentsList2( postedById, { id, description, quantity, collaborators, _collaboratorsMeta }, k ) {
     
-    const total = (userID !== postedById)? 
-      this._splitPayment(quantity, _collaboratorsMeta.count): 
-        quantity;
+    const totalDivided = this._splitPayment(quantity, _collaboratorsMeta.count);
 
     return <div key={k}>
-      {description} - {total} 
+      {description} - {quantity} 
       <br/> 
-      [{collaborators.map(_getCollaboratorsName(userID)).join(', ')}]
+      [{collaborators.map(_getCollaboratorsName(userID, totalDivided)).join(', ')}]
       {(userID === postedById) && <button onClick={e => this.deletePaymentById(id)}>Delete</button>}
       <br/><br/>
     </div>;

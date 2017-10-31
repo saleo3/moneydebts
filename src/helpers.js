@@ -11,8 +11,8 @@ export function _compare( thingToCompare ) {
 
 }
 
-export function _getCollaboratorsName(ID) {
+export function _getCollaboratorsName( ID, totalDivided ) {
 
-  return collaborator => collaborator.id === ID? 'You': collaborator.name;
+  return collaborator => `${collaborator.id === ID? 'You': collaborator.name} ${totalDivided}` ;
 
 }
