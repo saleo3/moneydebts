@@ -1,6 +1,7 @@
 import React, { Component } from "react";
-import { graphql, gql, compose } from 'react-apollo';
-import { setUserID, setAuthToken } from "./constants";
+import { graphql, compose } from 'react-apollo';
+import { setUserID, setAuthToken, setGroupID } from "./constants";
+import { CREATE_USER_MUTATION, SIGNIN_USER_MUTATION, USER_DEFAULT_GROUP } from "./gql";
 
 class Login extends Component {
 
@@ -13,9 +14,10 @@ class Login extends Component {
     this.setState( () => ({ [input]: target.value }) );    
   }
 
-  _saveUserData(id, token) {
+  _saveUserData(id, token, groupId) {
     setUserID(id);
     setAuthToken(token);
+    setGroupID(groupId);
   }
 
   async signinupHandler(isLogged) {
@@ -28,8 +30,12 @@ class Login extends Component {
       variables: { email, password }
     })
 
-      const { user: { id }, token } = data.signinUser;
-      this._saveUserData(id, token);
+      const { user: { id, defaultGroup }, token } = data.signinUser;
+      this._saveUserData(id, token, defaultGroup);
+
+      if (!defaultGroup) this.props.history.push('/groups');
+      this.props.history.push('/payments');
+
   }
 
   render() {
@@ -46,48 +52,6 @@ class Login extends Component {
 
 }
 
-
-const CREATE_USER_MUTATION = gql`
-
-mutation createUserMutation($email: String!, $password: String!) {
-  
-  createUser(
-    authProvider: {
-      email: {
-        email: $email,
-        password: $password
-      }
-    }
-  ) {
-    id
-  }
-
-  signinUser(email: {
-    email: $email,
-    password: $password
-  }) {
-    token
-    user {
-      id
-    }
-  }
-}
-`
-
-const SIGNIN_USER_MUTATION = gql`
-
-mutation signinUserMutation($email: String!, $password: String!) {
-  signinUser(email: {
-    email: $email,
-    password: $password
-  }) {
-    token
-    user {
-      id
-    }
-  }
-}
-`
 
 export default compose(
   graphql(CREATE_USER_MUTATION, { name: 'createUserMutation' }),

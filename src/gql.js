@@ -101,6 +101,7 @@ export const DELETE_PAYMENT_BY_ID = gql`
 export const PAYMENTS_BY_USER = gql`
 
 query allPaymentsByUser($group_id: ID!) {
+
     Group(id: $group_id) {
       users {
         id
@@ -119,7 +120,71 @@ query allPaymentsByUser($group_id: ID!) {
         }
       }
     }
+
   }
   
+
+`;
+
+
+export const CREATE_USER_MUTATION = gql`
+
+mutation createUserMutation($email: String!, $password: String!) {
+  
+  createUser(
+    authProvider: {
+      email: {
+        email: $email,
+        password: $password
+      }
+    }
+  ) {
+    id
+  }
+
+  signinUser(email: {
+    email: $email,
+    password: $password
+  }) {
+    token
+    user {
+      id
+    }
+  }
+
+}
+
+`;
+
+export const SIGNIN_USER_MUTATION = gql`
+
+mutation signinUserMutation($email: String!, $password: String!) {
+
+  signinUser(email: {
+    email: $email,
+    password: $password
+  }) {
+    token
+    user {
+      id
+      defaultGroup
+    }
+  }
+
+}
+
+`;
+
+export const USER_DEFAULT_GROUP = gql`
+
+mutation userDefaultGroup($id: ID!) {
+
+  User(id: $id) {
+    groups {
+      id
+    }
+  }
+  
+}
 
 `;
