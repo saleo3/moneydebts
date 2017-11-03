@@ -100,13 +100,32 @@ export const DELETE_PAYMENT_BY_ID = gql`
 
 export const PAYMENTS_BY_USER = gql`
 
-query allPaymentsByUser($group_id: ID!) {
+query allPaymentsByUser($group_id: ID!, $user_id: ID!) {
 
-    Group(id: $group_id) {
-      users {
+    Party(id: $group_id) {
+      name
+      members {
         id
         name
-        payments {
+        payments(
+          filter: {
+            party: {
+              id: $group_id
+            }
+            OR: [
+              {
+                collaborators_some: {
+                  id: $user_id
+                }
+              },
+              { 
+                postedBy: {
+                  id: $user_id
+                }
+              }
+            ]
+          }
+        ) {
           id
           quantity
           description
@@ -122,7 +141,6 @@ query allPaymentsByUser($group_id: ID!) {
     }
 
   }
-  
 
 `;
 
@@ -168,6 +186,10 @@ mutation signinUserMutation($email: String!, $password: String!) {
     user {
       id
       defaultGroup
+      createdParties {
+        id
+        name
+      }
     }
   }
 

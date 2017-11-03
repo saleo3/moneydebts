@@ -1,12 +1,12 @@
 import React, { Component } from "react";
 import { graphql, compose } from 'react-apollo';
-import { setUserID, setAuthToken, setGroupID, userID, groupID } from "./constants";
+import { setUserID, setAuthToken, setGroupID, setParties } from "./constants";
 import { CREATE_USER_MUTATION, SIGNIN_USER_MUTATION } from "./gql";
 
 class Login extends Component {
 
   state = {
-    email: 'emr.salazar@gmail.com',
+    email: 'alisons0216@gmail.com',
     password: '162603',
   }
 
@@ -14,10 +14,11 @@ class Login extends Component {
     this.setState( () => ({ [input]: target.value }) );    
   }
 
-  _saveUserData(id, token, groupId) {
+  _saveUserData(id, token, groupId, parties) {
     setUserID(id);
     setAuthToken(token);
     setGroupID(groupId);
+    setParties(parties);
   }
 
   async signinupHandler(isLogged) {
@@ -30,10 +31,8 @@ class Login extends Component {
       variables: { email, password }
     })
 
-      const { user: { id, defaultGroup }, token } = data.signinUser;
-      this._saveUserData(id, token, defaultGroup);
-      console.log(data.signinUser)
-      debugger
+      const { user: { id, defaultGroup, createdParties }, token } = data.signinUser;
+      this._saveUserData(id, token, defaultGroup, createdParties);
       
       if (id && defaultGroup) window.location = '/payments';
       if( id && !defaultGroup) window.location = '/groups';
