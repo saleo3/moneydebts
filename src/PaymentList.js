@@ -1,6 +1,6 @@
 import React, { Component } from 'react';
 import { graphql, compose } from 'react-apollo';
-import { userID } from './constants';
+import { userID, groupID } from './constants';
 import { PAYMENTS_SUSCRIPTIONS, PAYMENTS_BY_USER, DELETE_PAYMENT_BY_ID } from './gql';
 import { _getCollaboratorsName } from './helpers';
 import './styles.css';
@@ -95,18 +95,16 @@ class PaymentList extends Component {
   }
  
   render() {
-
-
-    const { paymentsByUser: { loading, error, Group } } = this.props;
+    // console.log(this.props)
+    // return null
+    const { paymentsByUser: { loading, error, Party } } = this.props;
 
     if (loading) return <div>Loading</div>;
-
     if (error) return <div>Error</div>;
 
-    const payments = Group.users.reduce( (acc, { id, name, payments }) => {
+    const payments = Party.members.reduce( (acc, { id, name, payments }) => {
 
       const amounts = this._getAmounts(payments);
-
       acc[id] = { id, name, payments, amounts };
 
       return acc
@@ -153,7 +151,7 @@ export default compose(
       options: {
         variables: {
           user_id: userID,
-          group_id: localStorage.getItem('debts-group-id')
+          group_id: groupID
         }
       }
     }

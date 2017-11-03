@@ -1,13 +1,13 @@
 import React, { Component } from "react";
 import { graphql, compose } from 'react-apollo';
-import { setUserID, setAuthToken, setGroupID } from "./constants";
-import { CREATE_USER_MUTATION, SIGNIN_USER_MUTATION, USER_DEFAULT_GROUP } from "./gql";
+import { setUserID, setAuthToken, setGroupID, userID, groupID } from "./constants";
+import { CREATE_USER_MUTATION, SIGNIN_USER_MUTATION } from "./gql";
 
 class Login extends Component {
 
   state = {
-    email: '',
-    password: '',
+    email: 'emr.salazar@gmail.com',
+    password: '162603',
   }
 
   inputHandler(input, {target}) {
@@ -32,9 +32,11 @@ class Login extends Component {
 
       const { user: { id, defaultGroup }, token } = data.signinUser;
       this._saveUserData(id, token, defaultGroup);
-
-      if (!defaultGroup) this.props.history.push('/groups');
-      this.props.history.push('/payments');
+      console.log(data.signinUser)
+      debugger
+      
+      if (id && defaultGroup) window.location = '/payments';
+      if( id && !defaultGroup) window.location = '/groups';
 
   }
 
