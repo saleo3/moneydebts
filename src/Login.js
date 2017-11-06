@@ -31,8 +31,8 @@ class Login extends Component {
       variables: { email, password }
     })
 
-      const { user: { id, defaultGroup, createdParties }, token } = data.signinUser;
-      this._saveUserData(id, token, defaultGroup, createdParties);
+      const { user: { id, defaultGroup, parties }, token } = data.signinUser;
+      this._saveUserData(id, token, defaultGroup, parties);
       
       if (id && defaultGroup) window.location = '/payments';
       if( id && !defaultGroup) window.location = '/groups';

@@ -1,5 +1,6 @@
 const userID = localStorage.getItem('debts-user-id');
 const groupID = localStorage.getItem('debts-group-id');
+const parties = JSON.parse(localStorage.getItem('debts-parties'));
 const authToken = localStorage.getItem('debts-auth-token');
 
 const setUserID = id => localStorage.setItem('debts-user-id', id);
@@ -14,5 +15,6 @@ export {
     setAuthToken,
     groupID,
     setGroupID,
-    setParties
+    setParties,
+    parties
 }
