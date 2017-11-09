@@ -186,9 +186,13 @@ mutation signinUserMutation($email: String!, $password: String!) {
     user {
       id
       defaultGroup
-      createdParties {
+      parties {
         id
         name
+        createdBy {
+          id
+          name
+        }
       }
     }
   }
@@ -210,3 +214,28 @@ mutation userDefaultGroup($id: ID!) {
 }
 
 `;
+
+
+export const UPDATE_DEFAULT_GROUP = gql`
+
+  mutation updateDefaultGroup($group_id: String!, $user_id: ID!) {
+  
+    updateUser(
+      id: $user_id, 
+      defaultGroup: $group_id
+    ) {
+      id
+      defaultGroup
+      parties {
+        id
+        name
+        createdBy {
+          id
+          name
+        }
+      }
+    }
+
+  }
+
+`
