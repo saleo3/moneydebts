@@ -8,13 +8,19 @@ import './styles.css';
 
 class PaymentList extends Component {
 
-  componentDidMount() {
+  componentDisdMount() {
 
     this.props.paymentsByUser.subscribeToMore({
       document: PAYMENTS_SUSCRIPTIONS,
+      variables: {
+        user_id: userID,
+        group_id: groupID
+      },
       updateQuery: (previous, {subscriptionData}) => {
         let payments;
-
+        console.log(previous, subscriptionData)
+        debugger
+      
         switch (subscriptionData.data.Payment.mutation) {
           case 'UPDATED':
             const index = previous.allPayments.findIndex(payment => subscriptionData.data.Payment.previousValues.id === payment.id);
@@ -23,7 +29,11 @@ class PaymentList extends Component {
             break;
         
           case 'DELETED':
-            payments = previous.allPayments.filter( payment => subscriptionData.data.Payment.previousValues.id !== payment.id);
+            payments = previous.Party.members.forEach( member => {
+
+              member.payments.filter( payment => subscriptionData.data.Payment.previousValues.id !== payment.id);
+            
+            })
             break;
           
           default:
