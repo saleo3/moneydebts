@@ -25,42 +25,6 @@ export const PAYMENTS_SUSCRIPTIONS = gql`
     }
   }`;
 
-export const PAYMENTS_ALL_USERS = gql`
-query allPaymentsByUserQuery ($user_id: ID!, $group_id: ID!) {
-  allPayments(
-    orderBy: id_DESC
-    filter: {
-      OR: [
-        { 
-          postedBy: {
-          	id: $user_id
-        	}
-        },
-        {
-          collaborators_some: {
-            id: $user_id
-          } 
-        }
-      ]
-      group: {
-        id: $group_id
-      }
-    }
-  ) {
-    id
-    description
-    quantity
-    postedBy {
-      id
-      name
-    }
-    collaborators {
-      id
-      name
-    }
-  }
-}`;
-
 export const CREATE_PAYMENT_MUTATION = gql`
 
 mutation createPaymentMutation($description: String!, $quantity: Float!, $postedById: ID!, $collaboratorsIds: [ID!]!, $groupId: ID!) {
@@ -69,12 +33,14 @@ mutation createPaymentMutation($description: String!, $quantity: Float!, $posted
     quantity: $quantity
     postedById: $postedById
     collaboratorsIds: $collaboratorsIds
-    groupId: $groupId
+    partyId: $groupId
   ) {
     id
   }
 
-}`;
+}
+
+`;
 
 export const GET_ALL_USERS = gql`
 
@@ -94,6 +60,23 @@ export const DELETE_PAYMENT_BY_ID = gql`
        id
      }
    }
+
+`;
+
+export const UPDATE_PAYMENT_BY_ID = gql`
+
+  mutation updatePaymentById($id: ID!, $description: String!, $quantity: Float!, $collaboratorsIds: [ID!]!)  {
+    
+    updatePayment( 
+      id: $id 
+      description: $description
+      quantity: $quantity
+      collaboratorsIds: $collaboratorsIds
+    ) {
+      id
+    }
+
+  }
 
 `;
 
@@ -238,4 +221,6 @@ export const UPDATE_DEFAULT_GROUP = gql`
 
   }
 
-`
+`;
+
+
