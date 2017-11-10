@@ -10,7 +10,7 @@ class AddPayment extends Component {
     
         const { description, quantity, collaborators } = state;
     
-        await props.createPaymentMutation({
+        const create = await props.createPaymentMutation({
             variables: { 
                 description, 
                 quantity: parseFloat(quantity), 
@@ -19,6 +19,8 @@ class AddPayment extends Component {
                 groupId: groupID 
             }
         });
+
+        if (create.data.createPayment.id) window.location = '/payments';
     
     }
   

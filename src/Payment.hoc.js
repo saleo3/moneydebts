@@ -8,15 +8,25 @@ class PaymentHOC extends Component {
     constructor(props) {
         super(props);
 
-        // this.addPayment = this.addPayment.bind(this);
         this.handleCollaborators = this.handleCollaborators.bind(this);
         this.handler = this.handler.bind(this);
+
+        this.state = {
+            description: '',
+            quantity: 0,
+            collaborators: []
+        }
     }
 
-    state = {
-        description: this.props.payment.description || '',
-        quantity: this.props.payment.quantity || 0,
-        collaborators: this.props.payment.collaborators || []
+    componentWillReceiveProps({ payment }) {
+
+        // update state if reciving props to edit the payment
+        payment && this.setState( () => ({
+            description: payment.description,
+            quantity: payment.quantity,
+            collaborators: payment.collaborators
+        }));
+        
     }
 
     handler(name, { target }) {
@@ -28,7 +38,6 @@ class PaymentHOC extends Component {
         let newCollaborators;
 
         newCollaborators = !collaborators.includes(target.value)? collaborators.concat(target.value): collaborators.filter( user => user !== target.value );
-
         this.setState( () => ({ collaborators: newCollaborators }) );
     }
 
