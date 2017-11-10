@@ -51,6 +51,16 @@ class PaymentList extends Component {
 
   }
 
+  editPaymentById( paymentSelected ) {
+
+    const payment = Object.assign({}, paymentSelected);
+    payment.collaborators = payment.collaborators.map( colaborator => colaborator.id );
+
+    this.props.history.push(`/editPayment/${payment.id}`, { payment });
+
+  }
+  
+
   toggleActivePayment({ target: selectedPayment }) {
     selectedPayment.classList.toggle('active');
   }
@@ -76,15 +86,18 @@ class PaymentList extends Component {
 
   }
 
-  _renderPaymentsList2( postedById, { id, description, quantity, collaborators, _collaboratorsMeta }, k ) {
-    
+  _renderPaymentsList2( postedById, payment, k ) {
+    const { id, description, quantity, collaborators, _collaboratorsMeta } = payment;
     const totalDivided = this._splitPayment(quantity, _collaboratorsMeta.count);
 
     return <div key={k}>
       {description} - {quantity} 
       <br/> 
       [{collaborators.map(_getCollaboratorsName(userID, totalDivided)).join(', ')}]
-      {(userID === postedById) && <button onClick={e => this.deletePaymentById(id)}>Delete</button>}
+      {(userID === postedById) && <div>
+        <button onClick={e => this.deletePaymentById(id)}>Delete</button>
+        <button onClick={e => this.editPaymentById(payment)}>Edit</button>
+      </div>}
       <br/><br/>
     </div>;
 
@@ -111,7 +124,7 @@ class PaymentList extends Component {
 
     }, {})
 
-    console.log(payments)
+    // console.log(payments)
 
     return (
       <div>
@@ -124,14 +137,14 @@ class PaymentList extends Component {
             const mine = payments[userID].amounts[id];
 
             return <div key={k}>
-                <div className="accordion title" onClick={e => this.toggleActivePayment(e)}>
-                  {user.name} - {user.amounts.total}
-                </div>
-                <div className="accordion content">
-                  {user.payments.map( (payment, k) => this._renderPaymentsList2(user.id, payment, k) )}
-                  <br/>
-                  {id !== userID && this._renderWhoOwsWho(mine, their)}
-                </div>
+              <div className="accordion title" onClick={e => this.toggleActivePayment(e)}>
+                {user.name} - {user.amounts.total}
+              </div>
+              <div className="accordion content">
+                {user.payments.map( (payment, k) => this._renderPaymentsList2(user.id, payment, k) )}
+                <br/>
+                {id !== userID && this._renderWhoOwsWho(mine, their)}
+              </div>
             </div>
 
           })}
