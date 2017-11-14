@@ -8,57 +8,12 @@ import './styles.css';
 
 class PaymentList extends Component {
 
-  componentDisdMount() {
-
-    this.props.paymentsByUser.subscribeToMore({
-      document: PAYMENTS_SUSCRIPTIONS,
-      variables: {
-        user_id: userID,
-        group_id: groupID
-      },
-      updateQuery: (previous, {subscriptionData}) => {
-        let payments;
-        console.log(previous, subscriptionData)
-        debugger
-      
-        switch (subscriptionData.data.Payment.mutation) {
-          case 'UPDATED':
-            const index = previous.allPayments.findIndex(payment => subscriptionData.data.Payment.previousValues.id === payment.id);
-            payments = [...previous.allPayments];
-            payments[index] = subscriptionData.data.Payment.node;
-            break;
-        
-          case 'DELETED':
-            payments = previous.Party.members.forEach( member => {
-
-              member.payments.filter( payment => subscriptionData.data.Payment.previousValues.id !== payment.id);
-            
-            })
-            break;
-          
-          default:
-          case 'CREATED': 
-            payments = [subscriptionData.data.Payment.node, ...previous.allPayments];
-            break
-        }
-            
-        return {
-          allPayments: payments
-        }
-
-      }
-    })
-
+  componentWillMount() {
+    this.props.subscribeToMorePayments()
   }
 
   async deletePaymentById( id ) {
-
-    await this.props.deletePaymentById({
-      variables: {
-        id
-      }
-    })
-
+    await this.props.deletePaymentById(id);
   }
 
   editPaymentById( paymentSelected ) {
@@ -118,12 +73,13 @@ class PaymentList extends Component {
   }
  
   render() {
-    // console.log(this.props)
-    // return null
+    console.log(this.props)
+    // return null;
     const { paymentsByUser: { loading, error, Party } } = this.props;
 
     if (loading) return <div>Loading</div>;
-    if (error) return <div>Error</div>;
+    if (error) return <div>error</div>;
+  
 
     const payments = Party.members.reduce( (acc, { id, name, payments }) => {
 
@@ -176,10 +132,69 @@ export default compose(
           user_id: userID,
           group_id: groupID
         }
-      }
+      },
+      props: props => ({
+        paymentsByUser: props.paymentsByUser,
+        subscribeToMorePayments: props.paymentsByUser.subscribeToMore({
+          document: PAYMENTS_SUSCRIPTIONS,
+          variables: {
+            user_id: userID,
+            group_id: groupID
+          },
+          updateQuery: (prev,{ subscriptionData }) => {
+            let newParty;
+            console.log(prev, subscriptionData);
+
+            switch(subscriptionData.Payment.mutation) {
+              case "CREATED":
+                const memberIndex = prev.Party.members.findIndex( member => member.id === subscriptionData.Payment.node.postedBy.id );
+                const memberData = prev.Party.members[memberIndex];
+                console.log(memberData)
+                // const { payments } = Object.assign({}, );
+                // const newPayment = subscriptionData.Payment.node;
+                // const allPayments = [...payments, newPayment];
+                // prev.Party.members[memberIndex].payments = allPayments;
+                console.log(prev.Party)
+
+                break;
+              case "DELETED":
+                let newMembers = [];
+                
+                prev.Party.members.forEach( ({ id, name, payments, __typename }) => {
+
+                  const paymentsFiltered = payments.filter( payment => payment.id !== subscriptionData.Payment.previousValues.id )
+                  newMembers.push({ id, name, payments: paymentsFiltered, __typename });
+
+                });
+
+                newParty = {
+                  name: prev.Party.name,
+                  members: newMembers,
+                  __typename: "Party"
+                }
+
+                console.log(newParty);
+                break;
+            }
+    
+            return { 
+              Party: newParty
+
+            }
+    
+          }
+        })
+      })
     }
   ),
   graphql(DELETE_PAYMENT_BY_ID, {
-    name: 'deletePaymentById'
+    name: 'deletePaymentById',
+    props: props => ({
+      deletePaymentById: id => props.deletePaymentById({
+        variables: {
+          id
+        }
+      })
+    })
   })
 )(PaymentList);
