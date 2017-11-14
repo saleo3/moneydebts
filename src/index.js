@@ -1,42 +1,58 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
 import App from './App';
+// import gql from 'graphql-tag';
+// import { ApolloProvider, graphql } from 'react-apollo';
+
+
 import registerServiceWorker from './registerServiceWorker';
-import { ApolloProvider, createNetworkInterface, ApolloClient } from "react-apollo";
 import { authToken } from "./constants";
-import { SubscriptionClient, addGraphQLSubscriptions } from 'subscriptions-transport-ws';
-// import { addGraphQLSubscriptions } from 'add-graphql-subscriptions';
 import { BrowserRouter } from 'react-router-dom';
 
+import { ApolloProvider } from 'react-apollo';
+import { ApolloClient } from 'apollo-client';
+import { createHttpLink } from 'apollo-link-http';
+import { InMemoryCache } from 'apollo-cache-inmemory';
+import { setContext } from 'apollo-link-context';
+import { WebSocketLink } from 'apollo-link-ws';
+import { split } from 'apollo-link';
+import { getMainDefinition } from 'apollo-utilities';
 
-const networkInterface = createNetworkInterface({
-    uri: 'https://api.graph.cool/simple/v1/cj8kfak0l000x01537mvz9ou1'
-});
 
-const wsClient = new SubscriptionClient('wss://subscriptions.graph.cool/v1/cj8kfak0l000x01537mvz9ou1', {
-  reconnect: true,
-  connectionParams: {
-     authToken: authToken
+const wsLink = new WebSocketLink({
+  uri: "wss://subscriptions.graph.cool/v1/cj8kfak0l000x01537mvz9ou1",
+  options: {
+    reconnect: true,
+    connectionParams: {
+      authToken
+    }
   }
 });
 
-networkInterface.use([{
-  applyMiddleware(req, next) {
-    if (!req.options.headers) req.options.headers = {};
+const httpLink = createHttpLink({ uri: "https://api.graph.cool/simple/v1/cj8kfak0l000x01537mvz9ou1" });
 
-    const token = authToken
-    req.options.headers.authorization = token ? `Bearer ${token}` : null
-    next();
+const middlewareLink = setContext(() => ({
+  headers: { 
+    authorization: authToken || null,
   }
-}]);
+}));
 
-const networkInterfaceWithSubscriptions = addGraphQLSubscriptions(
-  networkInterface,
-  wsClient
+// use with apollo-client
+const midLink = middlewareLink.concat(httpLink);
+
+const link = split(
+  // split based on operation type
+  ({ query }) => {
+    const { kind, operation } = getMainDefinition(query);
+    return kind === 'OperationDefinition' && operation === 'subscription';
+  },
+  wsLink,
+  midLink,
 );
 
 const client = new ApolloClient({
-  networkInterface: networkInterfaceWithSubscriptions
+  link,
+  cache: new InMemoryCache(),
 });
 
 ReactDOM.render(

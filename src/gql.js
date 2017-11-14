@@ -1,29 +1,57 @@
-import { gql } from 'react-apollo';
+import gql from 'graphql-tag';
 
 export const PAYMENTS_SUSCRIPTIONS = gql`
-  subscription  paymentSubscriptionMutation {
-    Payment(filter: {
-      mutation_in: [CREATED, UPDATED, DELETED]
-    }) {
-      mutation
-      previousValues {
-          id
+
+subscription paymentSubsciption($group_id: ID!, $user_id: ID!) {
+  Payment(
+    filter: {
+      node: {
+        party: {
+          id: $group_id
+        }
       }
-      node {
+      OR: [
+        {
+          node: {
+            collaborators_some: {
+              id: $user_id
+            }
+          }
+        },
+        {
+          node: {
+            postedBy: {
+              id: $user_id
+            }
+          }
+        }
+      ]
+    }
+  ) {
+    mutation
+    previousValues {
+      id
+    }
+    node {
+      id
+      quantity
+      description
+      _collaboratorsMeta {
+        count
+      }
+      collaborators {
         id
-        description
-        quantity
-        postedBy {
-          name
-          id
-        }
-        collaborators {
-          name
-          id
-        }
+        name
+      }
+      postedBy {
+        id
+        name
       }
     }
-  }`;
+  }
+}
+
+`;
 
 export const CREATE_PAYMENT_MUTATION = gql`
 
