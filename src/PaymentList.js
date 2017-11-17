@@ -9,7 +9,7 @@ import './styles.css';
 class PaymentList extends Component {
 
   componentWillMount() {
-    this.props.subscribeToMorePayments()
+    this.props.subscribeToMorePayments();
   }
 
   async deletePaymentById( id ) {
@@ -73,8 +73,6 @@ class PaymentList extends Component {
   }
  
   render() {
-    console.log(this.props)
-    // return null;
     const { paymentsByUser: { loading, error, Party } } = this.props;
 
     if (loading) return <div>Loading</div>;
@@ -89,8 +87,6 @@ class PaymentList extends Component {
       return acc
 
     }, {})
-
-    // console.log(payments)
 
     return (
       <div>
@@ -142,44 +138,27 @@ export default compose(
             group_id: groupID
           },
           updateQuery: (prev,{ subscriptionData }) => {
-            let newParty;
-            console.log(prev, subscriptionData);
+            let newMembers = [];
 
-            switch(subscriptionData.Payment.mutation) {
-              case "CREATED":
-                const memberIndex = prev.Party.members.findIndex( member => member.id === subscriptionData.Payment.node.postedBy.id );
-                const memberData = prev.Party.members[memberIndex];
-                console.log(memberData)
-                // const { payments } = Object.assign({}, );
-                // const newPayment = subscriptionData.Payment.node;
-                // const allPayments = [...payments, newPayment];
-                // prev.Party.members[memberIndex].payments = allPayments;
-                console.log(prev.Party)
+            prev.Party.members.forEach( member => {
+              // If in prop postedby is the same to the currrent member it means we are only work with 
+              // that and skip to the next member
+              const newMember = Object.assign({}, member);
+            
+              if (subscriptionData.Payment.mutation === "CREATED") newMember.payments = [...member.payments, subscriptionData.Payment.node];
+              if (subscriptionData.Payment.mutation === "DELETED") newMember.payments = member.payments.filter( payment => payment.id !== subscriptionData.Payment.previousValues.id );
+            
+              newMembers.push(newMember);
 
-                break;
-              case "DELETED":
-                let newMembers = [];
-                
-                prev.Party.members.forEach( ({ id, name, payments, __typename }) => {
+            });
 
-                  const paymentsFiltered = payments.filter( payment => payment.id !== subscriptionData.Payment.previousValues.id )
-                  newMembers.push({ id, name, payments: paymentsFiltered, __typename });
-
-                });
-
-                newParty = {
-                  name: prev.Party.name,
-                  members: newMembers,
-                  __typename: "Party"
-                }
-
-                console.log(newParty);
-                break;
-            }
     
             return { 
-              Party: newParty
-
+              Party: {
+                name: prev.Party.name,
+                members: newMembers || prev.Party.members,
+                __typename: "Party"
+              }
             }
     
           }
