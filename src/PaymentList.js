@@ -1,7 +1,7 @@
 import React, { Component } from 'react';
 import { graphql, compose } from 'react-apollo';
 import { userID, groupID } from './constants';
-import { PAYMENTS_SUSCRIPTIONS, PAYMENTS_BY_USER, DELETE_PAYMENT_BY_ID } from './gql';
+import { PAYMENTS_SUSCRIPTIONS, PAYMENTS_BY_USER, DELETE_PAYMENT_BY_ID, UPDATE_PAYMENT_AS_PAID } from './gql';
 import { _getCollaboratorsName } from './helpers';
 import './styles.css';
 
@@ -23,6 +23,10 @@ class PaymentList extends Component {
 
     this.props.history.push(`/editPayment/${payment.id}`, { payment });
 
+  }
+
+  async setPaymentAsPaid(payment) {
+    await this.props.setPaymentAsPaid(payment); 
   }
   
 
@@ -62,6 +66,7 @@ class PaymentList extends Component {
       {(userID === postedById) && <div>
         <button onClick={e => this.deletePaymentById(id)}>Delete</button>
         <button onClick={e => this.editPaymentById(payment)}>Edit</button>
+        <button onClick={e => this.setPaymentAsPaid(payment)}>Set Paid</button>
       </div>}
       <br/><br/>
     </div>;
@@ -74,6 +79,7 @@ class PaymentList extends Component {
  
   render() {
     const { paymentsByUser: { loading, error, Party } } = this.props;
+    let spends;
 
     if (loading) return <div>Loading</div>;
     if (error) return <div>error</div>;
@@ -82,21 +88,19 @@ class PaymentList extends Component {
     const payments = Party.members.reduce( (acc, { id, name, payments }) => {
 
       const amounts = this._getAmounts(payments);
-      acc[id] = { id, name, payments, amounts };
+      if(id === userID) spends = amounts;
 
-      return acc
+      return [...acc, { id, name, payments, amounts }];
 
-    }, {})
+    }, [])
 
     return (
       <div>
         Payments
         <div className="accordion">
-          {Object.keys(payments).map( (id, k) => {
-
-            const user = payments[id];
+          {payments.map( (user, k) => {
             const their = user.amounts[userID] || 0;
-            const mine = payments[userID].amounts[id];
+            const mine = spends[user.id] || 0;
 
             return <div key={k}>
               <div className="accordion title" onClick={e => this.toggleActivePayment(e)}>
@@ -105,7 +109,7 @@ class PaymentList extends Component {
               <div className="accordion content">
                 {user.payments.map( (payment, k) => this._renderPaymentsList2(user.id, payment, k) )}
                 <br/>
-                {id !== userID && this._renderWhoOwsWho(mine, their)}
+                {user.id !== userID && this._renderWhoOwsWho(mine, their)}
               </div>
             </div>
 
@@ -147,7 +151,8 @@ export default compose(
             
               if (subscriptionData.Payment.mutation === "CREATED") newMember.payments = [...member.payments, subscriptionData.Payment.node];
               if (subscriptionData.Payment.mutation === "DELETED") newMember.payments = member.payments.filter( payment => payment.id !== subscriptionData.Payment.previousValues.id );
-            
+              if (subscriptionData.Payment.mutation === "UPDATED") newMember.payments = member.payments.filter( payment => payment.id !== subscriptionData.Payment.previousValues.id && !payment.isPaid );
+
               newMembers.push(newMember);
 
             });
@@ -172,6 +177,17 @@ export default compose(
       deletePaymentById: id => props.deletePaymentById({
         variables: {
           id
+        }
+      })
+    })
+  }),
+  graphql(UPDATE_PAYMENT_AS_PAID, {
+    name: 'setPaymentAsPaid',
+    props: props => ({
+      setPaymentAsPaid: ({id, isPaid}) => props.setPaymentAsPaid({
+        variables: { 
+          id,
+          isPaid: !isPaid 
         }
       })
     })

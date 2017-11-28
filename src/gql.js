@@ -47,6 +47,7 @@ subscription paymentSubsciption($group_id: ID!, $user_id: ID!) {
         id
         name
       }
+      isPaid
     }
   }
 }
@@ -93,13 +94,29 @@ export const DELETE_PAYMENT_BY_ID = gql`
 
 export const UPDATE_PAYMENT_BY_ID = gql`
 
-  mutation updatePaymentById($id: ID!, $description: String!, $quantity: Float!, $collaboratorsIds: [ID!]!)  {
+  mutation updatePaymentById($id: ID!, $description: String!, $quantity: Float!, $collaboratorsIds: [ID!]!, $isPaid: Boolean)  {
     
     updatePayment( 
       id: $id 
       description: $description
       quantity: $quantity
       collaboratorsIds: $collaboratorsIds
+      isPaid: $isPaid
+    ) {
+      id
+    }
+
+  }
+
+`;
+
+export const UPDATE_PAYMENT_AS_PAID = gql`
+
+  mutation updatePaymentById($id: ID!, $isPaid: Boolean)  {
+    
+    updatePayment( 
+      id: $id 
+      isPaid: $isPaid
     ) {
       id
     }
@@ -120,9 +137,16 @@ query allPaymentsByUser($group_id: ID!, $user_id: ID!) {
         name
         payments(
           filter: {
-            party: {
-              id: $group_id
-            }
+            AND: [
+              {
+                isPaid_not: true
+              },
+              {
+                party: {
+                  id: $group_id
+                }
+              }
+            ]
             OR: [
               {
                 collaborators_some: {
@@ -147,6 +171,7 @@ query allPaymentsByUser($group_id: ID!, $user_id: ID!) {
             id
             name
           }
+          isPaid
         }
       }
     }
