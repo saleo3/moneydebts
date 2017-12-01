@@ -4,16 +4,14 @@ import PaymentList from './PaymentList';
 import AddPayment from './AddPayment';
 import EditPayment from './EditPayment';
 import Groups from './Groups';
-import { Switch, Route, Redirect } from 'react-router-dom';
+import { Switch, Route } from 'react-router-dom';
 import { userID } from './constants';
 
 const PrivateRoute = ({ component: Component, ...rest }) => (
   <Route {...rest} render={props => (
-    userID ? (
-      <Component {...props}/>
-    ) : (
-      <Redirect to={{ pathname: '/login' }}/>
-    )
+    userID 
+      ? <Component {...props}/>
+      : <Login/>
   )}/>
 )
 
@@ -27,7 +25,7 @@ class App extends Component {
         <a href="/payments">All Payments</a>
         <a href="/addPayment">Add Payment</a>
       <Switch>
-        <Route exact path='/login' component={Login}/>
+        <PrivateRoute path='/' component={PaymentList}/>
         <PrivateRoute path='/payments' component={PaymentList}/>
         <PrivateRoute path='/addPayment' component={AddPayment}/>
         <PrivateRoute path='/editPayment/:id' component={EditPayment}/>
