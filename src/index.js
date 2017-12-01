@@ -20,7 +20,7 @@ import { getMainDefinition } from 'apollo-utilities';
 
 
 const wsLink = new WebSocketLink({
-  uri: "wss://subscriptions.graph.cool/v1/cj8kfak0l000x01537mvz9ou1",
+  uri: `wss://subscriptions.graph.cool/v1/${process.env.REACT_APP_GRAPHQL_KEY}`,
   options: {
     reconnect: true,
     connectionParams: {
@@ -29,7 +29,7 @@ const wsLink = new WebSocketLink({
   }
 });
 
-const httpLink = createHttpLink({ uri: "https://api.graph.cool/simple/v1/cj8kfak0l000x01537mvz9ou1" });
+const httpLink = createHttpLink({ uri: `https://api.graph.cool/simple/v1/${process.env.REACT_APP_GRAPHQL_KEY}` });
 
 const middlewareLink = setContext(() => ({
   headers: { 
