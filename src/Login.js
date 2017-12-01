@@ -6,8 +6,8 @@ import { CREATE_USER_MUTATION, SIGNIN_USER_MUTATION } from "./gql";
 class Login extends Component {
 
   state = {
-    email: 'alisons0216@gmail.com',
-    password: '162603',
+    email: '',
+    password: '',
   }
 
   inputHandler(input, {target}) {
