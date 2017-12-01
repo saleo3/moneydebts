@@ -25,7 +25,7 @@ class App extends Component {
         <a href="/payments">All Payments</a>
         <a href="/addPayment">Add Payment</a>
       <Switch>
-        <PrivateRoute path='/' component={PaymentList}/>
+        <PrivateRoute exact path='/' component={PaymentList}/>
         <PrivateRoute path='/payments' component={PaymentList}/>
         <PrivateRoute path='/addPayment' component={AddPayment}/>
         <PrivateRoute path='/editPayment/:id' component={EditPayment}/>
