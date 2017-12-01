@@ -149,7 +149,11 @@ export default compose(
               // that and skip to the next member
               const newMember = Object.assign({}, member);
             
-              if (subscriptionData.Payment.mutation === "CREATED") newMember.payments = [...member.payments, subscriptionData.Payment.node];
+              if (subscriptionData.Payment.mutation === "CREATED") {
+                newMember.payments = ( member.id === subscriptionData.Payment.node.postedBy.id &&  member.payments.find(({id}) => id === subscriptionData.Payment.node.id) )
+                  ? member.payments
+                  : [...member.payments, subscriptionData.Payment.node];
+              }
               if (subscriptionData.Payment.mutation === "DELETED") newMember.payments = member.payments.filter( payment => payment.id !== subscriptionData.Payment.previousValues.id );
               if (subscriptionData.Payment.mutation === "UPDATED") newMember.payments = member.payments.filter( payment => payment.id !== subscriptionData.Payment.previousValues.id && !payment.isPaid );
 
