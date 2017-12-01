@@ -9,7 +9,9 @@ const PaymentView = ({
     <div>
         Add Payment <br />
         <input type='text' value={description} onChange={e => handler('description', e)} />
+        <br />
         <input type='text' value={quantity} onChange={e => handler('quantity', e)} />
+        <br />
         {allUsers.map( 
             ({ id, name }) => (<label key={id}>
             {userID === id? 'You': name}
@@ -21,6 +23,7 @@ const PaymentView = ({
             />
             </label>)
         )}
+        <br />
         {addPayment && <button onClick={addPayment}>ADD -></button>}
         {editPayment && <button onClick={editPayment}>Edit -></button>}
     </div>
